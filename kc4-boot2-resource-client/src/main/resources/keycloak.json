@@ -1,0 +1,10 @@
+{
+  "realm": "kc4-boot2",
+  "auth-server-url": "http://localhost:8080/auth",
+  "ssl-required": "external",
+  "resource": "kc4-boot2-client",
+  "credentials": {
+    "secret": "da831364-ca5f-4bbb-b8f5-d04c1284875a"
+  },
+  "confidential-port": 0
+}
