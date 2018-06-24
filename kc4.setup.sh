@@ -1,5 +1,32 @@
 #!/usr/bin/env bash
 
+cd `dirname $0`
+DIR=`pwd`
+
+## Download and Extract Keycloak
+if [ ! -d keycloak ]; then
+  mkdir keycloak
+fi
+cd keycloak
+
+if [ ! -d keycloak-4.0.0.Final ]; then
+  curl -O https://downloads.jboss.org/keycloak/4.0.0.Final/keycloak-4.0.0.Final.tar.gz
+  tar -zxvf keycloak-4.0.0.Final.tar.gz
+fi
+cd keycloak-4.0.0.Final
+
+## If exists Keycloak process, then exit
+if [ -n "`ps x | grep keycloak | grep -v grep`" ]; then
+  echo 'Keycloak has already started.'
+  exit 1
+fi
+
+## If exists using 8080 port process, then exit
+if [ -n "`netstat -an | grep LISTEN | awk '{print $4}' | grep '\.8080'`" ]; then
+  echo 'Port 8080 has already used by another process.'
+  exit 1
+fi
+
 ## Create Wildfly admin
 bin/add-user.sh \
   -u wildfly \
@@ -31,7 +58,8 @@ readonly USERNAME_ADMIN="alice"
 readonly USERNAME_USER="bob"
 readonly CLIENT_RESOURCE_SERVER="${REALM}-server"
 readonly CLIENT_RESOURCE_CLIENT="${REALM}-client"
-readonly ALLOW_REDIRECT_FROM="http://localhost:8081/*"
+readonly ALLOW_REDIRECT_FROM1="http://127.0.0.1:8081/*"
+readonly ALLOW_REDIRECT_FROM2="http://localhost:8081/*"
 
 ## Create Realm
 bin/kcadm.sh create realms \
@@ -80,5 +108,11 @@ bin/kcadm.sh add-roles \
 ## Create Clients
 RES_SRV_ID=`bin/kcadm.sh create clients -r ${REALM} -s clientId=${CLIENT_RESOURCE_SERVER} -s bearerOnly=true -i`; \
   echo "Created new client with id '${RES_SRV_ID}'"
-RES_CLI_ID=`bin/kcadm.sh create clients -r ${REALM} -s clientId=${CLIENT_RESOURCE_CLIENT} -s "redirectUris=[\"${ALLOW_REDIRECT_FROM}\"]" -i`; \
+RES_CLI_ID=`bin/kcadm.sh create clients -r ${REALM} -s clientId=${CLIENT_RESOURCE_CLIENT} -s "redirectUris=[\"${ALLOW_REDIRECT_FROM1}\", \"${ALLOW_REDIRECT_FROM2}\"]" -i`; \
   echo "Created new client with id '${RES_CLI_ID}'"
+
+## Install keycloak.json
+bin/kcadm.sh get clients/${RES_SRV_ID}/installation/providers/keycloak-oidc-keycloak-json \
+  -r ${REALM} >"${DIR}/kc4-boot2-resource-server/src/main/resources/keycloak.json"
+bin/kcadm.sh get clients/${RES_CLI_ID}/installation/providers/keycloak-oidc-keycloak-json \
+  -r ${REALM} >"${DIR}/kc4-boot2-resource-client/src/main/resources/keycloak.json"

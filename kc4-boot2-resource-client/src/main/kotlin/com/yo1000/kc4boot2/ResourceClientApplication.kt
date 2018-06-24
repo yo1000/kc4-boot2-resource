@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.getForObject
 
 @SpringBootApplication
 class ResourceClientApplication
@@ -34,19 +35,13 @@ fun main(args: Array<String>) {
 class SecurityConfig : KeycloakWebSecurityConfigurerAdapter() {
     @Bean
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-    fun restTemplate(factory: KeycloakClientRequestFactory): RestTemplate {
-        return KeycloakRestTemplate(factory)
-    }
+    fun restTemplate(factory: KeycloakClientRequestFactory): RestTemplate = KeycloakRestTemplate(factory)
 
-    override fun sessionAuthenticationStrategy(): SessionAuthenticationStrategy {
-        return RegisterSessionAuthenticationStrategy(SessionRegistryImpl())
-    }
+    override fun sessionAuthenticationStrategy(): SessionAuthenticationStrategy = RegisterSessionAuthenticationStrategy(
+            SessionRegistryImpl())
 
-    override fun adapterDeploymentContext(): AdapterDeploymentContext {
-        val factoryBean = AdapterDeploymentContextFactoryBean(ClassPathResource("keycloak.json"))
-        factoryBean.afterPropertiesSet()
-        return factoryBean.`object`!!
-    }
+    override fun adapterDeploymentContext(): AdapterDeploymentContext = AdapterDeploymentContextFactoryBean(
+            ClassPathResource("keycloak.json")).also { it.afterPropertiesSet() }.`object`!!
 
     override fun configure(auth: AuthenticationManagerBuilder?) {
         auth!!.authenticationProvider(keycloakAuthenticationProvider().also {
