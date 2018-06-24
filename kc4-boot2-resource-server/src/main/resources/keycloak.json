@@ -1,8 +1,8 @@
 {
-  "realm": "kc4-boot2",
-  "bearer-only": true,
-  "auth-server-url": "http://localhost:8080/auth",
-  "ssl-required": "external",
-  "resource": "kc4-boot2-server",
-  "confidential-port": 0
+  "realm" : "kc4-boot2",
+  "bearer-only" : true,
+  "auth-server-url" : "http://127.0.0.1:8080/auth",
+  "ssl-required" : "external",
+  "resource" : "kc4-boot2-server",
+  "confidential-port" : 0
 }
